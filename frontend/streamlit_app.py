@@ -40,7 +40,6 @@ st.markdown("""
         margin: 10px 0;
         color: white;
     }
-    .stChatMessage { border-radius: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -55,6 +54,32 @@ if "messages" not in st.session_state:
 if "tickets" not in st.session_state:
     st.session_state.tickets = []
 
+def send_message(message: str):
+    """Send message to API and store response"""
+    try:
+        response = requests.post(
+            f"{API_URL}/chat",
+            json={
+                "session_id": st.session_state.session_id,
+                "message": message,
+                "user_name": "User"
+            }
+        )
+        if response.status_code == 200:
+            data = response.json()
+
+            # Store ticket if created
+            if data.get("ticket_info") and data["ticket_info"].get("success"):
+                ticket = data["ticket_info"]
+                # Avoid duplicate tickets
+                existing_ids = [t["ticket_id"] for t in st.session_state.tickets]
+                if ticket["ticket_id"] not in existing_ids:
+                    st.session_state.tickets.append(ticket)
+
+            return data
+    except requests.exceptions.ConnectionError:
+        return None
+
 # Header
 st.markdown("""
 <div class="main-header">
@@ -68,94 +93,61 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     st.subheader("💬 Chat with TechSupport AI")
-    
+
     # Display chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-    
+            if message.get("ticket_id"):
+                st.markdown(f"""
+                <div class='ticket-box'>
+                🎫 <b>Ticket Created!</b><br>
+                ID: <b>{message['ticket_id']}</b><br>
+                Priority: {message.get('priority', 'N/A')}<br>
+                Status: Open
+                </div>
+                """, unsafe_allow_html=True)
+            if message.get("escalation_msg"):
+                st.markdown(f"""
+                <div class='escalation-box'>
+                {message['escalation_msg']}
+                </div>
+                """, unsafe_allow_html=True)
+
     # Chat input
     if prompt := st.chat_input("Describe your IT issue here..."):
         # Add user message
-        st.session_state.messages.append({
-            "role": "user",
-            "content": prompt
-        })
-        
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # Get AI response
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing your issue..."):
-                try:
-                    response = requests.post(
-                        f"{API_URL}/chat",
-                        json={
-                            "session_id": st.session_state.session_id,
-                            "message": prompt,
-                            "user_name": "User"
-                        }
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        
-                        # Show AI response
-                        st.markdown(data["response"])
-                        
-                        # Show issue metadata
-                        priority = data.get("priority", "Low")
-                        issue_type = data.get("issue_type", "General")
-                        
-                        priority_class = f"priority-{priority.lower()}"
-                        st.markdown(f"""
-                        <small>
-                        🏷️ Type: <b>{issue_type}</b> | 
-                        ⚡ Priority: <span class='{priority_class}'>{priority}</span> |
-                        📚 KB Match: {'✅' if data.get('kb_found') else '❌'}
-                        </small>
-                        """, unsafe_allow_html=True)
-                        
-                        # Show ticket info
-                        if data.get("ticket_info"):
-                            ticket = data["ticket_info"]
-                            st.session_state.tickets.append(ticket)
-                            st.markdown(f"""
-                            <div class='ticket-box'>
-                            🎫 <b>Ticket Created!</b><br>
-                            ID: <b>{ticket['ticket_id']}</b><br>
-                            Priority: {ticket['priority']}<br>
-                            Status: {ticket['status']}
-                            </div>
-                            """, unsafe_allow_html=True)
-                        
-                        # Show escalation
-                        if data.get("escalation_msg"):
-                            st.markdown(f"""
-                            <div class='escalation-box'>
-                            {data['escalation_msg']}
-                            </div>
-                            """, unsafe_allow_html=True)
-                        
-                        # Add to message history
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": data["response"]
-                        })
-                    
-                    else:
-                        st.error("API Error! Make sure FastAPI server is running.")
-                
-                except requests.exceptions.ConnectionError:
-                    st.error("❌ Cannot connect to API! Run: uvicorn app.main:app --reload")
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        with st.spinner("Analyzing your issue..."):
+            data = send_message(prompt)
+
+        if data:
+            assistant_msg = {
+                "role": "assistant",
+                "content": data["response"],
+            }
+            if data.get("ticket_info") and data["ticket_info"].get("success"):
+                assistant_msg["ticket_id"] = data["ticket_info"]["ticket_id"]
+                assistant_msg["priority"] = data["ticket_info"]["priority"]
+            if data.get("escalation_msg"):
+                assistant_msg["escalation_msg"] = data["escalation_msg"]
+
+            st.session_state.messages.append(assistant_msg)
+        else:
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": "❌ Cannot connect to API! Make sure FastAPI server is running."
+            })
+
+        st.rerun()
 
 with col2:
     st.subheader("🎫 Ticket Tracker")
-    
+
     # Ticket status checker
     ticket_id_input = st.text_input("Check Ticket Status:", placeholder="TK-20260630-1234")
-    
+
     if st.button("🔍 Check Status"):
         if ticket_id_input:
             try:
@@ -176,28 +168,29 @@ with col2:
                         </div>
                         """, unsafe_allow_html=True)
                     else:
-                        st.error(data.get("message"))
+                        st.error(data.get("message", "Ticket not found!"))
             except:
-                st.error("Cannot connect to API!")
-    
+                st.error("❌ Cannot connect to API!")
+
     st.divider()
-    
+
     # Session tickets
     st.subheader("📋 Your Tickets")
     if st.session_state.tickets:
         for ticket in st.session_state.tickets:
+            priority = ticket.get("priority", "Low")
             st.markdown(f"""
             <div class='ticket-box'>
             🎫 <b>{ticket['ticket_id']}</b><br>
-            Priority: {ticket['priority']}<br>
-            Status: {ticket['status']}
+            Priority: {priority}<br>
+            Status: {ticket.get('status', 'Open')}
             </div>
             """, unsafe_allow_html=True)
     else:
         st.info("No tickets created yet.")
-    
+
     st.divider()
-    
+
     # Quick issue buttons
     st.subheader("⚡ Quick Issues")
     quick_issues = [
@@ -208,18 +201,34 @@ with col2:
         "Email is not working",
         "Blue screen error"
     ]
-    
+
     for issue in quick_issues:
         if st.button(issue, use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": issue
-            })
+            st.session_state.messages.append({"role": "user", "content": issue})
+
+            data = send_message(issue)
+
+            if data:
+                assistant_msg = {
+                    "role": "assistant",
+                    "content": data["response"],
+                }
+                if data.get("ticket_info") and data["ticket_info"].get("success"):
+                    assistant_msg["ticket_id"] = data["ticket_info"]["ticket_id"]
+                    assistant_msg["priority"] = data["ticket_info"]["priority"]
+                if data.get("escalation_msg"):
+                    assistant_msg["escalation_msg"] = data["escalation_msg"]
+                st.session_state.messages.append(assistant_msg)
+            else:
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": "❌ Cannot connect to API!"
+                })
             st.rerun()
-    
+
     st.divider()
-    
-    # Clear chat button
+
+    # Clear chat
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.tickets = []

@@ -3,11 +3,23 @@ import faiss
 import numpy as np
 import os
 
-# Load model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Global variables
+model = None
+ISSUES = []
+SOLUTIONS = []
+FAISS_INDEX = None
 
 # Knowledge base path
 KB_PATH = os.path.join(os.path.dirname(__file__), "knowledge_base", "it_faqs.txt")
+
+def load_model():
+    """Load model lazily"""
+    global model
+    if model is None:
+        print("Loading sentence transformer model...")
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("Model loaded!")
+    return model
 
 def load_knowledge_base():
     """Load and parse knowledge base file"""
@@ -36,26 +48,31 @@ def load_knowledge_base():
     
     return issues, solutions
 
-def build_faiss_index(issues):
-    """Build FAISS index from issues"""
-    embeddings = model.encode(issues)
+def initialize():
+    """Initialize everything"""
+    global ISSUES, SOLUTIONS, FAISS_INDEX
+    
+    if FAISS_INDEX is not None:
+        return
+    
+    m = load_model()
+    ISSUES, SOLUTIONS = load_knowledge_base()
+    
+    embeddings = m.encode(ISSUES)
     embeddings = np.array(embeddings).astype('float32')
     
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(embeddings)
+    FAISS_INDEX = faiss.IndexFlatL2(dimension)
+    FAISS_INDEX.add(embeddings)
     
-    return index, embeddings
-
-# Load knowledge base on startup
-print("Loading knowledge base...")
-ISSUES, SOLUTIONS = load_knowledge_base()
-FAISS_INDEX, _ = build_faiss_index(ISSUES)
-print(f"Knowledge base loaded! {len(ISSUES)} issues indexed.")
+    print(f"Knowledge base ready! {len(ISSUES)} issues indexed.")
 
 def search_knowledge_base(query: str, top_k: int = 3) -> list:
     """Search knowledge base for similar issues"""
-    query_embedding = model.encode([query])
+    initialize()
+    
+    m = load_model()
+    query_embedding = m.encode([query])
     query_embedding = np.array(query_embedding).astype('float32')
     
     distances, indices = FAISS_INDEX.search(query_embedding, top_k)
