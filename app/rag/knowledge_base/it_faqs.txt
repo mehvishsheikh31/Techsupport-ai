@@ -1,0 +1,44 @@
+ISSUE: VPN not connecting
+SOLUTION: First check your internet connection. Open VPN client and try reconnecting. If still not working, try restarting VPN service. Go to Services, find VPN client service, restart it. If problem persists, reinstall VPN client software.
+
+ISSUE: Forgot password / Password reset
+SOLUTION: Click on Forgot Password on login screen. Enter your registered email address. Check your email for reset link. Click the link within 30 minutes. Create a new strong password with at least 8 characters including uppercase, lowercase, number and special character.
+
+ISSUE: Computer running slow
+SOLUTION: First restart your computer. Check Task Manager for high CPU or RAM usage programs. Disable unnecessary startup programs. Run Disk Cleanup to free up space. Check if hard drive has at least 10% free space. Run antivirus scan to check for malware. Consider upgrading RAM if problem persists.
+
+ISSUE: Blue screen of death BSOD
+SOLUTION: Note down the error code shown on blue screen. Restart computer and check if it boots normally. Run Windows Memory Diagnostic tool. Check for recent driver updates that may have caused issue. Run SFC scan: open Command Prompt as admin and type sfc /scannow. If problem persists raise a high priority ticket.
+
+ISSUE: WiFi not connecting
+SOLUTION: Turn WiFi off and on again. Forget the network and reconnect. Restart your router. Check if other devices can connect to same network. Run Windows Network Troubleshooter. Update network adapter drivers. Check if airplane mode is accidentally on.
+
+ISSUE: Email not working / Outlook issues
+SOLUTION: Check internet connection first. Close and reopen Outlook. Check if Outlook is in offline mode, click Send/Receive tab. Clear Outlook cache. Remove and re-add email account. Check if Microsoft Exchange server is down. Reinstall Office if problem persists.
+
+ISSUE: Printer not printing
+SOLUTION: Check if printer is turned on and connected. Check printer queue for stuck jobs and clear them. Restart print spooler service. Check if correct printer is selected as default. Update or reinstall printer drivers. Check ink or toner levels. Try printing a test page from printer settings.
+
+ISSUE: Cannot install software
+SOLUTION: Check if you have admin rights on your computer. Right click installer and Run as Administrator. Temporarily disable antivirus during installation. Check if there is enough disk space. Download installer again in case file was corrupted. Contact IT if software requires special license or permission.
+
+ISSUE: Monitor not displaying / Black screen
+SOLUTION: Check if monitor power cable is connected. Check if display cable HDMI or VGA is properly connected to both monitor and computer. Try pressing Windows key plus P to cycle display modes. Test monitor with another computer to check if monitor itself is faulty. Check graphics card connection inside computer.
+
+ISSUE: Keyboard or mouse not working
+SOLUTION: Check USB connection, try different USB port. Try wireless receiver in different USB port. Replace batteries if wireless device. Test device on another computer. Update or reinstall device drivers from Device Manager. Try device on another computer to confirm if hardware is faulty.
+
+ISSUE: Microsoft Teams not working
+SOLUTION: Sign out and sign back into Teams. Clear Teams cache by closing Teams, navigating to AppData Local Packages folder and clearing cache. Check internet connection. Update Teams to latest version. Reinstall Teams if problem persists. Check if Teams service is down on Microsoft status page.
+
+ISSUE: Google Chrome not working
+SOLUTION: Clear browser cache and cookies. Disable extensions one by one to find problematic one. Reset Chrome settings to default. Uninstall and reinstall Chrome. Check if issue occurs in other browsers too. Update Chrome to latest version.
+
+ISSUE: Computer not turning on
+SOLUTION: Check power cable connection. Check if power outlet is working. Hold power button for 10 seconds to force shutdown then restart. Remove external devices and try again. Check if battery is charged if laptop. If desktop check if power supply unit is working. This may require hardware inspection by IT team.
+
+ISSUE: Data recovery / Accidentally deleted files
+SOLUTION: Check Recycle Bin first. Use Ctrl Z to undo recent deletions. Check if file exists in backup or cloud storage. Use Windows File History if enabled. Stop using the drive immediately to prevent overwriting. Raise a high priority ticket for IT team to attempt recovery with specialized tools.
+
+ISSUE: Software license expired
+SOLUTION: Contact IT department for license renewal. Provide software name and version. IT team will provide new license key or arrange renewal. Do not attempt to use cracked or unauthorized software. Temporary workarounds may be available while waiting for renewal.
