@@ -221,3 +221,7 @@ with col2:
     
     # Clear chat button
     if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.tickets = []
+        st.session_state.session_id = str(uuid.uuid4())
+        st.rerun()
