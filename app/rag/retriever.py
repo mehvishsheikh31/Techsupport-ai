@@ -68,23 +68,32 @@ def initialize():
     print(f"Knowledge base ready! {len(ISSUES)} issues indexed.")
 
 def search_knowledge_base(query: str, top_k: int = 3) -> list:
-    """Search knowledge base for similar issues"""
-    initialize()
-    
-    m = load_model()
-    query_embedding = m.encode([query])
-    query_embedding = np.array(query_embedding).astype('float32')
-    
-    distances, indices = FAISS_INDEX.search(query_embedding, top_k)
-    
-    results = []
-    for i, idx in enumerate(indices[0]):
-        if idx < len(ISSUES):
-            score = float(1 / (1 + distances[0][i]))
-            results.append({
-                "issue": ISSUES[idx],
-                "solution": SOLUTIONS[idx],
-                "score": round(score, 3)
-            })
-    
-    return results
+    """Search knowledge base for similar issues.
+
+    Returns an empty list on any failure (e.g. the embedding model can't be
+    downloaded because of no internet access) instead of raising, so callers
+    can treat "no results" and "search unavailable" the same way.
+    """
+    try:
+        initialize()
+
+        m = load_model()
+        query_embedding = m.encode([query])
+        query_embedding = np.array(query_embedding).astype('float32')
+
+        distances, indices = FAISS_INDEX.search(query_embedding, top_k)
+
+        results = []
+        for i, idx in enumerate(indices[0]):
+            if idx < len(ISSUES):
+                score = float(1 / (1 + distances[0][i]))
+                results.append({
+                    "issue": ISSUES[idx],
+                    "solution": SOLUTIONS[idx],
+                    "score": round(score, 3)
+                })
+
+        return results
+    except Exception as e:
+        print(f"search_knowledge_base failed: {e}")
+        return []
