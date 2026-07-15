@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 import os
 
@@ -21,7 +20,14 @@ class Ticket(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 # Database setup
-DATABASE_URL = "sqlite:///./app/database/tickets.db"
+# NOTE: We build an absolute path (based on this file's location) instead of a
+# relative one. A relative path like "sqlite:///./app/database/tickets.db"
+# resolves against whatever directory the process happens to be launched from.
+# That meant the FastAPI server and the Streamlit admin dashboard could end up
+# reading/writing two DIFFERENT database files if launched from different
+# folders -- tickets created in the chatbot wouldn't show up in the dashboard.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'tickets.db')}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

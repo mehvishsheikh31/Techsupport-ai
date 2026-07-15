@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -5,11 +6,22 @@ from app.agent import process_message, check_ticket
 from app.database.models import init_db
 import uvicorn
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    init_db()
+    print("Database initialized!")
+    yield
+    # (No shutdown work needed)
+
+
 # Initialize FastAPI
 app = FastAPI(
     title="TechSupport AI",
     description="Intelligent IT Helpdesk Agent",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS middleware
@@ -32,12 +44,6 @@ class ChatRequest(BaseModel):
 
 class TicketRequest(BaseModel):
     ticket_id: str
-
-# Initialize DB on startup
-@app.on_event("startup")
-async def startup_event():
-    init_db()
-    print("Database initialized!")
 
 @app.get("/")
 async def root():
@@ -77,7 +83,12 @@ async def chat(request: ChatRequest):
         }
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Log the real error server-side, but don't leak internals to the client
+        print(f"[/chat] Unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong while processing your message. Please try again."
+        )
 
 @app.post("/ticket/status")
 async def ticket_status(request: TicketRequest):
@@ -85,7 +96,11 @@ async def ticket_status(request: TicketRequest):
         result = check_ticket(request.ticket_id)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[/ticket/status] Unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong while checking that ticket. Please try again."
+        )
 
 @app.get("/health")
 async def health():
