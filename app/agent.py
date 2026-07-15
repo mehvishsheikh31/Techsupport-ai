@@ -42,6 +42,27 @@ CRITICAL RULE: Only mention a ticket ID if one is explicitly given to you in the
 "No ticket created yet", do NOT invent, guess, or output any ticket ID — instead, 
 just say you'll create one if the issue isn't resolved after trying the steps."""
 
+def _build_fallback_response(issue_type, priority, kb_result, troubleshooting, ticket_info) -> str:
+    """Deterministic response used only if the LLM call itself fails,
+    so a Groq/API outage never leaves the user with a hard error."""
+    lines = [f"I've looked into your {issue_type.lower()} issue (Priority: {priority})."]
+
+    if kb_result.get("found"):
+        lines.append(f"\nRelated known issue: {kb_result['issue']}")
+        lines.append(f"Suggested solution: {kb_result['solution']}")
+
+    lines.append("\nTry these steps:")
+    for i, step in enumerate(troubleshooting, 1):
+        lines.append(f"{i}. {step}")
+
+    if ticket_info and ticket_info.get("success"):
+        lines.append(f"\nA ticket has been created for you: {ticket_info['ticket_id']}")
+    else:
+        lines.append("\nIf these steps don't resolve it, let me know and I'll create a support ticket.")
+
+    return "\n".join(lines)
+
+
 def process_message(user_message: str, conversation_history: list) -> dict:
     """Process user message and return response with actions"""
     
@@ -56,7 +77,14 @@ def process_message(user_message: str, conversation_history: list) -> dict:
     priority = classify_priority(user_message)
     
     # Step 2 - Search knowledge base
-    kb_result = search_it_solution(user_message)
+    # Wrapped in try/except: if the vector search backend has any hiccup
+    # (e.g. can't load its embedding model), the whole chat request should
+    # not fail -- we simply fall back to "no KB match" and keep going.
+    try:
+        kb_result = search_it_solution(user_message)
+    except Exception as e:
+        print(f"Knowledge base search failed: {e}")
+        kb_result = {"found": False, "message": "Knowledge base unavailable.", "solution": None}
     
     # Step 3 - Get troubleshooting steps
     troubleshooting = get_troubleshooting_steps(issue_type)
@@ -112,14 +140,25 @@ Suggested Troubleshooting Steps for {issue_type}:
         {"role": "system", "content": SYSTEM_PROMPT + f"\n\nCurrent Context:\n{context}"}
     ] + conversation_history
     
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=messages,
-        max_tokens=1000,
-        temperature=0.7
-    )
-    
-    ai_response = response.choices[0].message.content
+    # NOTE: llama-3.1-8b-instant was deprecated by Groq (shutdown 08/16/2026).
+    # openai/gpt-oss-20b is Groq's recommended production replacement.
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.7
+        )
+        ai_response = response.choices[0].message.content
+    except Exception as e:
+        # If the LLM call fails (bad/missing API key, rate limit, network
+        # issue, etc.) don't crash the whole request -- fall back to a
+        # deterministic response built from the KB + troubleshooting steps
+        # we already computed above, so the user still gets useful help.
+        print(f"LLM call failed: {e}")
+        ai_response = _build_fallback_response(
+            issue_type, priority, kb_result, troubleshooting, ticket_info
+        )
     
     # Add AI response to history
     conversation_history.append({
