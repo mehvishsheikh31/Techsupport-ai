@@ -35,7 +35,12 @@ You have access to:
 - Ticket Management System
 - Escalation System
 
-Never make up solutions. Always provide practical, actionable steps."""
+Never make up solutions. Always provide practical, actionable steps.
+
+CRITICAL RULE: Only mention a ticket ID if one is explicitly given to you in the 
+"Current Context" section below (under "Ticket Created: ..."). If the context says 
+"No ticket created yet", do NOT invent, guess, or output any ticket ID — instead, 
+just say you'll create one if the issue isn't resolved after trying the steps."""
 
 def process_message(user_message: str, conversation_history: list) -> dict:
     """Process user message and return response with actions"""
