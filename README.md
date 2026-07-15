@@ -1,175 +1,64 @@
 # 🖥️ TechSupport AI
 
-> **An AI-powered IT Helpdesk Agent that automates issue triage, knowledge retrieval, troubleshooting, ticket creation, and escalation.**
+> **An AI-powered IT Helpdesk Agent** that automates issue triage, semantic knowledge retrieval, troubleshooting, ticket creation, and escalation.
 
-Built for the **Support Chat Bot Track**, TechSupport AI reduces manual support workload by intelligently diagnosing user issues, recommending solutions, and creating support tickets automatically whenever required.
-
----
-
-## 🌟 Features
-
-✅ Intelligent Issue Classification
-
-- Detects issue category:
-  - 🌐 Network
-  - 💻 Hardware
-  - ⚙️ Software
-  - 🔐 Access
-  - 📧 Communication
-
-- Automatically assigns priority:
-  - 🔴 Critical
-  - 🟠 High
-  - 🟡 Medium
-  - 🟢 Low
+Built for the **Support Chat Bot Track**.
 
 ---
 
-✅ Semantic Knowledge Search
+## ✨ Features
 
-Uses **FAISS + Sentence Transformers** to search an IT knowledge base using semantic similarity rather than simple keyword matching.
-
-Even if users describe problems differently, the system retrieves the most relevant solution.
-
----
-
-✅ Guided Troubleshooting
-
-Provides clear, step-by-step troubleshooting instructions tailored to the detected issue.
-
----
-
-✅ Automatic Ticket Creation
-
-Support tickets are generated automatically when:
-
-- Priority is High
-- Priority is Critical
-- User indicates the issue remains unresolved
-
-No manual intervention required.
+- 🌐 Detects issue type (Network, Hardware, Software, Access, Communication)
+- 🚦 Assigns priority (Critical, High, Medium, Low)
+- 🔍 Semantic search using **FAISS + Sentence Transformers**
+- 🛠️ Step-by-step troubleshooting guides
+- 🎫 Automatic ticket creation for High/Critical or unresolved issues
+- 🚨 Automatic escalation for urgent tickets
+- 🤖 Groq LLM generates clear responses
+- 🛡️ Graceful fallback if the LLM is unavailable
+- 📊 Admin dashboard with analytics and ticket management
 
 ---
 
-✅ Smart Escalation
+## 🏗 Architecture
 
-Critical and High priority issues are immediately escalated with response expectations.
-
----
-
-✅ Fault Tolerant Design
-
-If the LLM becomes unavailable due to:
-
-- API failure
-- Invalid key
-- Network issue
-- Rate limit
-
-the backend still returns:
-
-- Knowledge Base result
-- Issue classification
-- Troubleshooting guide
-- Ticket creation
-
-The chatbot never simply crashes.
-
----
-
-✅ Admin Dashboard
-
-Support staff can monitor:
-
-- Ticket statistics
-- Priority distribution
-- Issue type distribution
-- Ticket status
-- CSV Export
-
----
-
-# 🏗 System Architecture
-
-```
-                 User
-                   │
-                   ▼
-         Streamlit Chat Interface
-                   │
-                   ▼
-           FastAPI Backend API
-                   │
-     ┌─────────────┼──────────────┐
-     ▼             ▼              ▼
-Issue        Knowledge Base     Ticket
-Classifier      Retrieval      Management
-     │             │              │
-     └──────┬──────┴───────┬──────┘
-            ▼              ▼
-      Escalation Logic   Groq LLM
-              │
-              ▼
-        Final Response
+```text
+User
+ │
+ ▼
+Streamlit UI
+ │
+ ▼
+FastAPI Backend
+ │
+ ├── Issue Classification
+ ├── KB Semantic Search
+ ├── Troubleshooting
+ ├── Ticket Creation
+ ├── Escalation
+ └── Groq LLM
+ │
+ ▼
+Response
 ```
 
 ---
 
-# ⚙ Workflow
+## 📂 Project Structure
 
-```
-User Message
-      │
-      ▼
-Issue Classification
-      │
-      ▼
-Semantic KB Search
-      │
-      ▼
-Troubleshooting Guide
-      │
-      ▼
-Ticket Creation (if needed)
-      │
-      ▼
-Escalation (Critical / High)
-      │
-      ▼
-Groq LLM
-      │
-      ▼
-Final Response
-```
-
----
-
-# 📂 Project Structure
-
-```
+```text
 TechSupportAI/
-
 │
 ├── app/
 │   ├── main.py
 │   ├── agent.py
-│   │
 │   ├── database/
-│   │      └── models.py
-│   │
 │   ├── rag/
-│   │      ├── retriever.py
-│   │      └── knowledge_base/
-│   │              └── it_faqs.txt
-│   │
 │   └── tools/
-│          ├── ticket_tool.py
-│          ├── escalate_tool.py
-│          └── search_tool.py
 │
 ├── frontend/
-│      ├── streamlit_app.py
-│      └── admin_dashboard.py
+│   ├── streamlit_app.py
+│   └── admin_dashboard.py
 │
 ├── requirements.txt
 ├── .env
@@ -180,100 +69,97 @@ TechSupportAI/
 
 # 🚀 Getting Started
 
-## Prerequisites
+## Requirements
 
 - Python 3.10+
 - Groq API Key
 
----
-
-## 1. Clone Repository
+## Clone
 
 ```bash
 git clone https://github.com/yourusername/TechSupportAI.git
-
 cd TechSupportAI
 ```
 
----
+## Create Virtual Environment
 
-## 2. Install Dependencies
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+```
+
+## Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+## Configure Environment
 
-## 3. Configure Environment
-
-Create a `.env` file
+Create a `.env` file:
 
 ```env
 GROQ_API_KEY=your_api_key
 ```
 
----
-
-## 4. Start Backend
+## Start Backend
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Runs at
+Runs on:
 
 ```
 http://localhost:8000
 ```
 
----
-
-## 5. Launch Chat Interface
+## Start Chat UI
 
 ```bash
 streamlit run frontend/streamlit_app.py
 ```
 
-Runs at
+Runs on:
 
 ```
 http://localhost:8501
 ```
 
----
-
-## 6. Launch Admin Dashboard
+## Start Admin Dashboard
 
 ```bash
 streamlit run frontend/admin_dashboard.py --server.port 8502
 ```
 
-Runs at
+Runs on:
 
 ```
 http://localhost:8502
 ```
 
+> Run all commands from the project root.
+
 ---
 
-# 📡 API Endpoints
+# 📡 API
 
-## POST `/chat`
-
-Send a support request.
-
-### Request
+### POST `/chat`
 
 ```json
 {
-  "session_id":"123",
-  "message":"Internet is not working",
-  "user_name":"Alice"
+  "session_id": "123",
+  "message": "Internet is not working",
+  "user_name": "Alice"
 }
 ```
 
-### Response
+Response
 
 ```json
 {
@@ -282,142 +168,64 @@ Send a support request.
   "issue_type": "Network",
   "priority": "High",
   "ticket_info": {
-      "ticket_id":"TK-20260716-4821",
-      "status":"Open"
+    "ticket_id": "TK-20260716-4821",
+    "status": "Open"
   },
   "kb_found": true,
-  "escalation_msg":"..."
+  "escalation_msg": "..."
 }
 ```
 
----
-
-## POST `/ticket/status`
+### POST `/ticket/status`
 
 Returns ticket status.
 
----
+### GET `/health`
 
-## GET `/health`
-
-Backend health check.
+Health check endpoint.
 
 ---
 
 # 🧠 Tech Stack
 
 | Layer | Technology |
-|---------|------------|
+|-------|------------|
 | Backend | FastAPI |
 | Frontend | Streamlit |
 | Database | SQLite + SQLAlchemy |
 | Vector Search | FAISS |
 | Embeddings | Sentence Transformers |
 | LLM | Groq (gpt-oss-20b) |
-| Visualization | Plotly |
+| Charts | Plotly |
 
 ---
 
-# 🎯 Why This Design?
+# 🎯 Design Highlights
 
-Instead of relying entirely on an LLM, TechSupport AI separates deterministic business logic from natural language generation.
-
-The system first:
-
-- Classifies issues
-- Determines priority
-- Searches the knowledge base
-- Creates tickets
-- Handles escalations
-
-Only after these reliable steps does the LLM generate a user-friendly response.
-
-This architecture makes the system:
-
-- More reliable
-- Easier to test
-- Resistant to hallucinations
-- Functional even when the LLM is unavailable
-
----
-
-# 📊 Dashboard
-
-The Admin Dashboard provides:
-
-- Ticket Management
-- Live Analytics
-- Issue Distribution
-- Priority Breakdown
-- Ticket Status Tracking
-- CSV Export
+- Deterministic issue classification and ticket creation
+- Semantic search for FAQ retrieval
+- LLM used only for response generation
+- Automatic escalation for urgent issues
+- Graceful degradation when the LLM is unavailable
+- Shared SQLite database for chat and admin dashboard
 
 ---
 
 # 📸 Screenshots
 
-Add screenshots here.
-
 ```
 assets/
-
-chat.png
-
-dashboard.png
-
-ticket.png
+├── chat.png
+├── dashboard.png
+└── ticket.png
 ```
-
----
-
-# 🔮 Future Improvements
-
-- Email notifications
-- Slack/MS Teams integration
-- Authentication & Role-Based Access
-- Multi-language support
-- Voice-enabled support assistant
-- PDF report generation
-- Real-time monitoring dashboard
-- Docker deployment
-- Kubernetes support
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-
-2. Create a feature branch
-
-```bash
-git checkout -b feature/new-feature
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add new feature"
-```
-
-4. Push
-
-```bash
-git push origin feature/new-feature
-```
-
-5. Open a Pull Request
 
 ---
 
 # 📜 License
 
-Licensed under the MIT License.
+Licensed under the **MIT License**.
 
 ---
 
-## ⭐ If you found this project useful, please consider giving it a Star!
-
-It helps others discover the project and motivates future improvements.
+⭐ If you found this project useful, consider giving it a **Star**!

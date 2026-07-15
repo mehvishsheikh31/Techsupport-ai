@@ -25,7 +25,7 @@ st.markdown("""
         --panel-border: #1F2937;
         --accent: #FBBF24;
         --accent-2: #22D3EE;
-        --text: #E5E7EB;
+        --text: #F5F7FA;
         --text-dim: #8B96A8;
         --critical: #F87171;
         --high: #FB923C;
@@ -158,6 +158,74 @@ st.markdown("""
 
     div[data-testid="stChatInput"] textarea {
         font-family: 'Inter', sans-serif !important;
+        color: var(--text) !important;
+        background: var(--panel) !important;
+    }
+
+    /* ── Chat bubbles (fixes low-visibility text on default light bubble) ── */
+    [data-testid="stChatMessage"] {
+        background: var(--panel) !important;
+        border: 1px solid var(--panel-border) !important;
+        border-radius: 10px !important;
+        padding: 6px 6px !important;
+    }
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] li,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] strong,
+    [data-testid="stChatMessage"] em {
+        color: var(--text) !important;
+        font-size: 0.95rem !important;
+        line-height: 1.55 !important;
+    }
+    [data-testid="stChatMessage"] h1,
+    [data-testid="stChatMessage"] h2,
+    [data-testid="stChatMessage"] h3,
+    [data-testid="stChatMessage"] h4 {
+        color: #fff !important;
+    }
+    [data-testid="stChatMessage"] a { color: var(--accent-2) !important; }
+    [data-testid="stChatMessage"] code {
+        color: var(--accent) !important;
+        background: rgba(255,255,255,0.06) !important;
+    }
+
+    /* Sidebar / column text + inputs, in case system is on OS light mode */
+    section[data-testid="stSidebar"], .main {
+        color: var(--text) !important;
+    }
+    div[data-testid="stTextInput"] input {
+        color: var(--text) !important;
+        background: var(--panel) !important;
+        border: 1px solid var(--panel-border) !important;
+    }
+
+    /* ── FORCE CONTRAST: catch-all, highest specificity ──────────────────
+       Streamlit's default light-theme text-color rules sometimes win
+       (different DOM structure across versions). These rules use the
+       widest possible selectors + !important so nothing slips through. */
+    .stApp, .stApp * {
+        color: var(--text);
+    }
+    .stApp [data-testid="stChatMessage"],
+    .stApp [data-testid="stChatMessage"] * {
+        color: #FFFFFF !important;
+    }
+    .stApp [data-testid="stChatMessageAvatarUser"],
+    .stApp [data-testid="stChatMessageAvatarAssistant"] {
+        background: var(--panel) !important;
+    }
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
+        color: #FFFFFF !important;
+    }
+    .stApp [data-testid="stMarkdownContainer"],
+    .stApp [data-testid="stMarkdownContainer"] * {
+        color: #FFFFFF !important;
+    }
+    .stApp a, .stApp a * { color: var(--accent-2) !important; }
+    .stApp [data-testid="stChatMessage"] code {
+        color: var(--accent) !important;
+        background: rgba(255,255,255,0.08) !important;
     }
 </style>
 """, unsafe_allow_html=True)
